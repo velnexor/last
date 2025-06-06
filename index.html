@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velnexor - 24-Hour Web3 Emergency Response</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary: #8b5cf6;
+            --accent: #06ffa5;
+            --dark: #0f0f23;
+            --darker: #0a0a1a;
+            --text: #ffffff;
+            --text-muted: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* Glass morphism utility */
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 1rem 2rem;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .emergency-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 8px 30px rgba(239, 68, 68, 0.6); }
+        }
+
+        .emergency-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            max-width: 1000px;
+            z-index: 10;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 6vw, 6rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.2s forwards;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.4s forwards;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--glass-border);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-3px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 20px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Services Section */
+        .services {
+            padding: 6rem 2rem;
+            background: var(--dark);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-bottom: 4rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .services-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .service-card {
+            padding: 3rem;
+            border-radius: 20px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .service-card:hover::before {
+            left: 100%;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent);
+        }
+
+        .service-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .service-description {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-features {
+            list-style: none;
+        }
+
+        .service-features li {
+            padding: 0.5rem 0;
+            color: var(--text-muted);
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .service-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* Academy Section */
+        .academy {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+        }
+
+        .academy-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .course-card {
+            padding: 2.5rem;
+            border-radius: 20px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .course-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent);
+        }
+
+        .course-number {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .course-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+            padding-right: 3rem;
+        }
+
+        .course-description {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .course-duration {
+            display: inline-block;
+            background: rgba(6, 255, 165, 0.1);
+            color: var(--accent);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 6rem 2rem;
+            background: var(--dark);
+        }
+
+        .steps-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .step-description {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+        }
+
+        .testimonials-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .testimonial {
+            padding: 2.5rem;
+            border-radius: 20px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .testimonial:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .testimonial-role {
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 2rem 2rem;
+            background: var(--darker);
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            padding: 0.3rem 0;
+        }
+
+        .footer-section ul li a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section ul li a:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-muted);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 3rem;
+            }
+            
+            .services-grid,
+            .academy-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Loading animation */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 1s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--glass-border);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">VELNEXOR</div>
+            <ul class="nav-links">
+                <li><a href="#services">Services</a></li>
+                <li><a href="#academy">Academy</a></li>
+                <li><a href="#how-it-works">Process</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+            </ul>
+            <a href="#emergency" class="emergency-btn">🚨 Emergency Support</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>24-Hour Emergency Response for Web3 Projects</h1>
+            <p class="hero-subtitle">Legal. Security. Growth. Everything your Web3 project needs – fast, founder-friendly, and confidential. DAOs, DeFi, NFTs, tokens, smart contracts – we've got your back when it matters most.</p>
+            <div class="hero-cta">
+                <a href="#emergency" class="btn-primary">
+                    🚨 Get Emergency Support
+                </a>
+                <a href="#services" class="btn-secondary">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" data-target="40">0</div>
+                <div class="stat-label">Protocols Supported</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" data-target="120">0</div>
+                <div class="stat-label">Million $ Value Secured</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" data-target="24">0</div>
+                <div class="stat-label">Hour Response Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" data-target="3">0</div>
+                <div class="stat-label">Industry Publications</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="section-title">Critical Web3 Support – Fast & Expert</div>
+        <div class="section-subtitle">Comprehensive emergency response services designed specifically for the unique challenges of Web3 projects</div>
+        
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">⚖️</div>
+                <h3 class="service-title">Legal & Compliance</h3>
+                <p class="service-description">Emergency legal support for the complex regulatory landscape of Web3 projects.</p>
+                <ul class="service-features">
+                    <li>Emergency legal support for C&Ds and SEC issues</li>
+                    <li>Scam prevention through investor & VC checks</li>
+                    <li>Contract review for SAFTs, NDAs, and DAO terms</li>
+                    <li>Regulatory compliance assessments</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">🛡️</div>
+                <h3 class="service-title">Smart Contract Security</h3>
+                <p class="service-description">Rapid security audits and vulnerability assessments to protect your protocol and users.</p>
+                <ul class="service-features">
+                    <li>Rapid audits for DeFi, NFTs, and tokens</li>
+                    <li>Exploit & vulnerability detection</li>
+                    <li>Protocol risk assessments</li>
+                    <li>Emergency patch deployment</li>
+                </ul>
+            </div>
+
+            <div class="service-card">
+                <div class="service-icon">🚀</div>
+                <h3 class="service-title">Growth & Branding</h3>
+                <p class="service-description">Strategic growth solutions and marketing expertise tailored for Web3 projects.</p>
+                <ul class="service-features">
+                    <li>Web3 positioning & messaging</li>
+                    <li>Token & NFT launch marketing</li>
+                    <li>Growth hacking & go-to-market strategies</li>
+                    <li>Community building and engagement</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Academy Section -->
+    <section class="academy" id="academy">
+        <div class="section-title">VELNEXOR Academy</div>
+        <div class="section-subtitle">Comprehensive Web3 education programs designed to empower developers, founders, and professionals with cutting-edge knowledge and practical skills</div>
+        
+        <div class="academy-grid">
+            <div class="course-card">
+                <div class="course-number">1</div>
+                <h3 class="course-title">Web3 Basics Certification</h3>
+                <p class="course-description">Master the fundamentals of blockchain technology, cryptocurrency, and decentralized systems. Perfect for beginners entering the Web3 space.</p>
+                <span class="course-duration">4 Weeks</span>
+            </div>
+
+            <div class="course-card">
+                <div class="course-number">2</div>
+                <h3 class="course-title">Solidity Development + Security</h3>
+                <p class="course-description">Learn smart contract development with Solidity and advanced security practices. Includes hands-on projects and security audit techniques.</p>
+                <span class="course-duration">8 Weeks</span>
+            </div>
+
+            <div class="course-card">
+                <div class="course-number">3</div>
+                <h3 class="course-title">Tokenomics & GTM Strategies</h3>
+                <p class="course-description">Design sustainable token economies and effective go-to-market strategies for Web3 projects. Learn from real-world case studies.</p>
+                <span class="course-duration">6 Weeks</span>
+            </div>
+
+            <div class="course-card">
+                <div class="course-number">4</div>
+                <h3 class="course-title">DeFi Mechanics & Risk</h3>
+                <p class="course-description">Deep dive into decentralized finance protocols, yield farming, liquidity provision, and risk management strategies.</p>
+                <span class="course-duration">6 Weeks</span>
+            </div>
+
+            <div class="course-card">
+                <div class="course-number">5</div>
+                <h3 class="course-title">DAO Operations & Multisigs</h3>
+                <p class="course-description">Learn to set up and operate decentralized autonomous organizations, governance mechanisms, and secure multi-signature wallets.</p>
+                <span class="course-duration">5 Weeks</span>
+            </div>
+
+            <div class="course-card">
+                <div class="course-number">6</div>
+                <h3 class="course-title">Web3 Marketing Mastery</h3>
+                <p class="course-description">Master the art of Web3 marketing, community building, social token strategies, and decentralized growth tactics.</p>
+                <span class="course-duration">7 Weeks</span>
+            </div>
+
+            <div class="course-card">
+                <div class="course-number">7</div>
+                <h3 class="course-title">Legal & Compliance Certification</h3>
+                <p class="course-description">Navigate the complex regulatory landscape of Web3, understand compliance requirements, and manage legal risks effectively.</p>
+                <span class="course-duration">6 Weeks</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="section-title">How It Works</div>
+        <div class="section-subtitle">Get expert Web3 support in four simple steps – from emergency to resolution in 24 hours</div>
+        
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Choose Your Need</h3>
+                <p class="step-description">Select the type of emergency support you require: legal, security, or growth assistance.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Schedule a Call</h3>
+                <p class="step-description">Book an immediate consultation with our team of Web3 experts and specialists.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Get Expert Support</h3>
+                <p class="step-description">Work with vetted specialists matched to your specific situation and project needs.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3 class="step-title">24-Hour Delivery</h3>
+                <p class="step-description">Receive comprehensive solutions and actionable strategies within a single day.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="testimonials">
+        <div class="section-title">Trusted by Web3 Leaders</div>
+        <div class="section-subtitle">Real stories from founders who've relied on Velnexor during their most critical moments</div>
+        
+        <div class="testimonials-grid">
+            <div class="testimonial">
+                <p class="testimonial-text">"We were hit with a cease-and-desist from a regulator on a Friday night. Velnexor had legal counsel on a call with us in under 2 hours. Lifesavers."</p>
+                <div class="testimonial-author">Sarah L.</div>
+                <div class="testimonial-role">DeFi Project Lead</div>
+            </div>
+
+            <div class="testimonial">
+                <p class="testimonial-text">"Their smart contract audit caught a critical flaw before launch. Could've been a $2M exploit. Worth every cent."</p>
+                <div class="testimonial-author">Leo M.</div>
+                <div class="testimonial-role">NFT Platform Founder</div>
+            </div>
+
+            <div class="testimonial">
+                <p class="testimonial-text">"Velnexor fixed our messaging and ran a marketing sprint that tripled user traction in 5 days."</p>
+                <div class="testimonial-author">Ravi T.</div>
+                <div class="testimonial-role">Token Project Manager</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="emergency">
+        <div class="cta-content">
+            <h2>Ready for 24/7 Web3 Support?</h2>
+            <p>Don't let emergencies derail your Web3 project. Get expert support when you need it most.</p>
+            <div class="hero-cta">
+                <a href="mailto:emergency@velnexor.com" class="btn-primary" style="background: white; color: var(--primary);">
+                    🚨 Get Emergency Support
+                </a>
+                <a href="tel:+1-800-VELNEXOR" class="btn-secondary" style="border-color: rgba(255,255,255,0.3); color: white;">
+                    📞 Call Now
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Emergency Services</h3>
+                <ul>
+                    <li><a href="#legal">Legal & Compliance</a></li>
+                    <li><a href="#security">Smart Contract Security</a></li>
+                    <li><a href="#growth">Growth & Marketing</a></li>
+                    <li><a href="#crisis">Crisis Management</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Academy</h3>
+                <ul>
+                    <li><a href="#basics">Web3 Basics Certification</a></li>
+                    <li><a href="#solidity">Solidity Development</a></li>
+                    <li><a href="#tokenomics">Tokenomics & GTM</a></li>
+                    <li><a href="#defi">DeFi Mechanics</a></li>
+                    <li><a href="#dao">DAO Operations</a></li>
+                    <li><a href="#marketing">Web3 Marketing</a></li>
+                    <li><a href="#legal-cert">Legal Certification</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Supported Chains</h3>
+                <ul>
+                    <li><a href="#ethereum">Ethereum</a></li>
+                    <li><a href="#solana">Solana</a></li>
+                    <li><a href="#avalanche">Avalanche</a></li>
+                    <li><a href="#polygon">Polygon</a></li>
+                    <li><a href="#arbitrum">Arbitrum</a></li>
+                    <li><a href="#base">Base</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <ul>
+                    <li><a href="mailto:emergency@velnexor.com">emergency@velnexor.com</a></li>
+                    <li><a href="tel:+1-800-VELNEXOR">+1-800-VELNEXOR</a></li>
+                    <li><a href="#telegram">Telegram Support</a></li>
+                    <li><a href="#discord">Discord Community</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 Velnexor. All rights reserved. | Professional Web3 Emergency Response & Education</p>
+        </div>
+    </footer>
+
+    <script>
+        // Loading Screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loading = document.getElementById('loading');
+                loading.style.opacity = '0';
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                }, 1000);
+            }, 1500);
+        });
+
+        // Animated Background
+        function initBackground() {
+            const canvas = document.getElementById('bg-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Create particles
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 200;
+            const posArray = new Float32Array(particlesCount * 3);
+            
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 10;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.005,
+                color: '#6366f1',
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+            
+            camera.position.z = 3;
+            
+            // Animation
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                particlesMesh.rotation.x += 0.0005;
+                particlesMesh.rotation.y += 0.0005;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Handle resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // Counter Animation
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            
+            const observerOptions = {
+                threshold: 0.7
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counter = entry.target;
+                        const target = parseInt(counter.getAttribute('data-target'));
+                        const increment = target / 100;
+                        let current = 0;
+                        
+                        const timer = setInterval(() => {
+                            current += increment;
+                            if (current >= target) {
+                                counter.textContent = target + (target === 120 ? 'M+' : target === 40 ? '+' : '');
+                                clearInterval(timer);
+                            } else {
+                                counter.textContent = Math.floor(current) + (target === 120 ? 'M+' : target === 40 ? '+' : '');
+                            }
+                        }, 20);
+                    }
+                });
+            }, observerOptions);
+            
+            counters.forEach(counter => observer.observe(counter));
+        }
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Navigation scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                nav.style.background = 'rgba(15, 15, 35, 0.98)';
+                nav.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+            } else {
+                nav.style.background = 'rgba(15, 15, 35, 0.95)';
+                nav.style.boxShadow = 'none';
+            }
+        });
+
+        // Card hover effects
+        function addCardEffects() {
+            const cards = document.querySelectorAll('.service-card, .course-card, .testimonial');
+            
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        }
+
+        // Intersection Observer for animations
+        function addScrollAnimations() {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+            
+            // Add animation classes
+            const animatedElements = document.querySelectorAll('.service-card, .course-card, .step, .testimonial');
+            animatedElements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = `all 0.6s ease ${index * 0.1}s`;
+                observer.observe(el);
+            });
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initBackground();
+            animateCounters();
+            addCardEffects();
+            addScrollAnimations();
+        });
+
+        // Emergency button pulse effect
+        const emergencyBtn = document.querySelector('.emergency-btn');
+        setInterval(() => {
+            emergencyBtn.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                emergencyBtn.style.transform = 'scale(1)';
+            }, 200);
+        }, 3000);
+
+        // Mobile menu toggle (basic implementation)
+        const navToggle = document.createElement('div');
+        navToggle.innerHTML = '☰';
+        navToggle.style.display = 'none';
+        navToggle.style.fontSize = '1.5rem';
+        navToggle.style.cursor = 'pointer';
+        navToggle.style.color = 'white';
+        
+        // Add mobile responsiveness
+        function checkMobile() {
+            const navLinks = document.querySelector('.nav-links');
+            if (window.innerWidth <= 768) {
+                navToggle.style.display = 'block';
+                navLinks.style.display = 'none';
+                document.querySelector('.nav-container').appendChild(navToggle);
+            } else {
+                navToggle.style.display = 'none';
+                navLinks.style.display = 'flex';
+            }
+        }
+        
+        window.addEventListener('resize', checkMobile);
+        checkMobile();
+    </script>
